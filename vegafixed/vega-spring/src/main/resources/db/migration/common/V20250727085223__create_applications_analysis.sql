@@ -1,0 +1,91 @@
+CREATE TABLE applications (
+    id BIGINT AUTO_INCREMENT NOT NULL,
+    created_by_user_id BIGINT,
+    last_modified_by_user_id BIGINT,
+    created_at DATETIME,
+    updated_at DATETIME,
+    belong_by_user_id BIGINT NOT NULL,
+    env_hostname VARCHAR(255),
+    security_status VARCHAR(255),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE analysis (
+    id BIGINT AUTO_INCREMENT NOT NULL,
+    created_by_user_id BIGINT,
+    last_modified_by_user_id BIGINT,
+    created_at DATETIME,
+    updated_at DATETIME,
+    application_id BIGINT,
+    ts TIMESTAMP(6),
+    Payload_Length INT,
+    Var_Payload DOUBLE,
+    Protocol_Type VARCHAR(255),
+    Duration DOUBLE,
+    Entropy DOUBLE,
+    Srate DOUBLE,
+    Drate DOUBLE,
+    fin_flag_number INT,
+    syn_flag_number INT,
+    rst_flag_number INT,
+    psh_flag_number INT,
+    ack_flag_number INT,
+    urg_flag_number INT,
+    ece_flag_number INT,
+    cwr_flag_number INT,
+    ack_count INT,
+    syn_count INT,
+    fin_count INT,
+    urg_count INT,
+    rst_count INT,
+    max_duration DOUBLE,
+    min_duration DOUBLE,
+    sum_duration DOUBLE,
+    average_duration DOUBLE,
+    std_duration DOUBLE,
+    SUM_CoAP INT,
+    SUM_HTTP INT,
+    SUM_HTTPS INT,
+    SUM_DNS INT,
+    SUM_Telnet INT,
+    SUM_SMTP INT,
+    SUM_SSH INT,
+    SUM_IRC INT,
+    SUM_TCP INT,
+    SUM_UDP INT,
+    SUM_DHCP INT,
+    SUM_ARP INT,
+    SUM_ICMP INT,
+    SUM_IGMP INT,
+    SUM_IPv INT,
+    SUM_LLC INT,
+    Tot_sum DOUBLE,
+    Min DOUBLE,
+    Max DOUBLE,
+    AVG DOUBLE,
+    Std DOUBLE,
+    Tot_size DOUBLE,
+    Number DOUBLE,
+    Magnitue DOUBLE,
+    Radius DOUBLE,
+    Covariance DOUBLE,
+    Variance DOUBLE,
+    Weight DOUBLE,
+    DS_status VARCHAR(255),
+    Fragments INT,
+    Sequence_number INT,
+    flow_idle_time BIGINT,
+    flow_active_time BIGINT,
+    IDSResult INT,
+    PRIMARY KEY (id)
+);
+
+-- Constraints for analysis table
+ALTER TABLE analysis ADD CONSTRAINT FK_ANALYSIS_APPLICATION FOREIGN KEY (application_id) REFERENCES applications(id);
+
+
+-- Constraints for application table
+ALTER TABLE applications ADD CONSTRAINT FK_APPLICATION_CREATED_BY_USER FOREIGN KEY (created_by_user_id) REFERENCES users(id);
+ALTER TABLE applications ADD CONSTRAINT FK_APPLICATION_LAST_MODIFIED_BY_USER FOREIGN KEY (last_modified_by_user_id) REFERENCES users(id);
+ALTER TABLE applications ADD CONSTRAINT FK_APPLICATION_BELONG_BY_USER FOREIGN KEY (belong_by_user_id) REFERENCES users(id);
+

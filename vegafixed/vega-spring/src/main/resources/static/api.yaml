@@ -1,0 +1,1063 @@
+openapi: 3.0.0
+
+info:
+  version: v0.1.0
+  title: Vega API
+
+servers:
+  # - url: http://20.108.185.182:8080/vega/api/v1
+  - url: http://10.0.0.172:8080/api/v1
+    description: test development server
+
+components:
+  parameters:
+    offsetParam:
+      in: query
+      name: offset
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+      description: The number of items to skip before starting to collect the result set.
+
+    limitParam:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 120
+        default: 20
+      description: The numbers of items to return.
+
+    sortParam:
+      in: query
+      name: sort
+      required: false
+      schema:
+        type: string
+      description: The sort property, if the sort property starts with `<` it will sort ASC, or `>` it will sort DESC.
+
+    filterParam:
+      in: query
+      name: filter
+      required: false
+      schema:
+        type: string
+      description: Filter results using RSQL queries.
+
+  responses:
+    Error:
+      description: Error occurred
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      properties:
+        code:
+          type: string
+          description: Error code if any.
+        message:
+          type: string
+          description: General error message
+        details:
+          type: string
+          description: Error details.
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violation'
+        extraData:
+          type: string
+          description: Extra data
+
+    Violation:
+      description: Violation in API request
+      discriminator:
+        propertyName: type
+        mapping:
+          ConstraintViolation: '#/components/schemas/ConstraintViolation'
+      properties:
+        type:
+          description: Violation type
+          type: string
+        message:
+          description: Violation message
+          type: string
+
+    ConstraintViolation:
+      allOf:
+        - $ref: '#/components/schemas/Violation'
+        - type: object
+          properties:
+            property:
+              type: string
+              description: Property name
+
+    RegisterUserRequest:
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          $ref: '#/components/schemas/RegisterUserRole'
+        jobTitle:
+          type: string
+      required:
+        - name
+        - email
+        - password
+        - role
+
+    RegisterUserRole:
+      type: string
+      enum:
+        - USER
+        - EMPLOYEE
+        - ADMIN
+
+    LoginUserRequest:
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    LoginUserResponse:
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        accessToken:
+          type: string
+
+    UserDetails:
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        displayName:
+          type: string
+
+    UserList:
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        status:
+          $ref: '#/components/schemas/UserStatus'
+
+    UserStatus:
+      type: string
+      enum:
+        - created
+        - active
+        - inactive
+
+    FileList:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        path:
+          type: string
+        contentType:
+          type: string
+
+    FileUpload:
+      description: FileUpload model for creation of file
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+      required:
+        - file
+
+    FileDownloadRequest:
+      description: File download request model
+      type: object
+      properties:
+        filePath:
+          type: string
+      required:
+        - filePath
+
+    UpdateUserRoleRequest:
+      type: object
+      properties:
+        newRole:
+          $ref: '#/components/schemas/RegisterUserRole'
+
+    EmployeesList:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+          format: int64
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        status:
+          $ref: '#/components/schemas/UserStatus'
+
+    SecurityStatus:
+      type: string
+      enum:
+        - pending
+        - normal
+        - attacked
+
+    RegisterDefenseAppRequest:
+      description: Register the defense application with the target environment
+      type: object
+      properties:
+        email:
+          type: string
+        envHostname:
+          type: string
+      required:
+        - email
+        - envHostname
+
+    RegisterDefenseAppResponse:
+      type: object
+      properties:
+        appId:
+          type: integer
+          format: int64
+
+
+    UploadDpiDataRequest:
+      description: Upload target environment Dpi data
+      type: object
+      properties:
+        appId:
+          type: integer
+          format: int64
+        ts:
+          type: string
+          format: date-time
+        payloadLength:
+          type: integer
+        varPayload:
+          type: number
+          format: double
+        protocolType:
+          type: string
+        duration:
+          type: number
+          format: double
+        entropy:
+          type: number
+          format: double
+        srate:
+          type: number
+          format: double
+        drate:
+          type: number
+          format: double
+        finFlagNumber:
+          type: integer
+        synFlagNumber:
+          type: integer
+        rstFlagNumber:
+          type: integer
+        pshFlagNumber:
+          type: integer
+        ackFlagNumber:
+          type: integer
+        urgFlagNumber:
+          type: integer
+        eceFlagNumber:
+          type: integer
+        cwrFlagNumber:
+          type: integer
+        ackCount:
+          type: integer
+        synCount:
+          type: integer
+        finCount:
+          type: integer
+        urgCount:
+          type: integer
+        rstCount:
+          type: integer
+        maxDuration:
+          type: number
+        minDuration:
+          type: number
+        sumDuration:
+          type: number
+        averageDuration:
+          type: number
+        stdDuration:
+          type: number
+        sumCoap:
+          type: integer
+        sumHttp:
+          type: integer
+        sumHttps:
+          type: integer
+        sumDns:
+          type: integer
+        sumTelnet:
+          type: integer
+        sumSmtp:
+          type: integer
+        sumSsh:
+          type: integer
+        sumIrc:
+          type: integer
+        sumTcp:
+          type: integer
+        sumUdp:
+          type: integer
+        sumDhcp:
+          type: integer
+        sumArp:
+          type: integer
+        sumIcmp:
+          type: integer
+        sumIgmp:
+          type: integer
+        sumIpv:
+          type: integer
+        sumLlc:
+          type: integer
+        totSum:
+          type: number
+        min:
+          type: number
+        max:
+          type: number
+        avg:
+          type: number
+        std:
+          type: number
+        totSize:
+          type: number
+        number:
+          type: number
+          format: double
+        magnitude:
+          type: number
+        radius:
+          type: number
+        covariance:
+          type: number
+        variance:
+          type: number
+        weight:
+          type: number
+        dsStatus:
+          type: string
+        fragments:
+          type: integer
+        sequenceNumber:
+          type: integer
+        idsResult:
+          type: integer
+        flowIdleTime:
+          type: integer
+          format: int64
+        flowActiveTime:
+          type: integer
+          format: int64
+      required:
+        - appId
+
+    DefenseClientMetricsUpdate:
+      description: WebSocket message payload for defense client metrics updates
+      type: object
+      properties:
+        timestamp:
+          type: string
+        appId:
+          type: integer
+          format: int64
+        secStatus:
+          $ref: '#/components/schemas/SecurityStatus'
+        payloadStats:
+          type: object
+          properties:
+            payloadLength:
+              type: integer
+            entropy:
+              type: number
+              format: double
+            min:
+              type: number
+            max:
+              type: number
+            avg:
+              type: number
+        rateStats:
+          type: object
+          properties:
+            srate:
+              type: number
+              format: double
+            drate:
+              type: number
+              format: double
+            flowActiveTime:
+              type: integer
+              format: int64
+        protocols:
+          type: object
+          properties:
+            coap:
+              type: integer
+            http:
+              type: integer
+            https:
+              type: integer
+            dns:
+              type: integer
+            telnet:
+              type: integer
+            ssh:
+              type: integer
+            tcp:
+              type: integer
+            udp:
+              type: integer
+            dhcp:
+              type: integer
+            arp:
+              type: integer
+            icmp:
+              type: integer
+            igmp:
+              type: integer
+      required:
+        - timestamp
+        - appId
+        - secStatus
+
+
+
+    StartSniffingRequest:
+      type: object
+      properties:
+        appId:
+          type: integer
+          format: int64
+        iface:
+          type: string
+        ids_mode:
+          type: boolean
+      required:
+        - appId
+        - iface
+        - ids_mode
+
+    EnvInfoRequest:
+      type: object
+      properties:
+        appId:
+          type: integer
+          format: int64
+        hostIp:
+          type: string
+          format: ipv4
+        iface:
+          type: array
+          items:
+            type: string
+      required:
+        - appId
+        - hostIp
+        - iface
+
+    RegisterDefenseClientResponse:
+      type: object
+      properties:
+        envHostname:
+          type: string
+        appId:
+          type: integer
+          format: int64
+        hostIp:
+          type: string
+          format: ipv4
+        iface:
+          type: array
+          items:
+            type: string
+        idsOption:
+          type: array
+          items:
+            type: string
+            enum: [ 'True', 'False' ]
+        secStatus:
+          $ref: '#/components/schemas/SecurityStatus'
+      required:
+        - envHostname
+        - appId
+        - hostIp
+        - iface
+        - idsOption
+        - secStatus
+
+    AdminDefenseClient:
+      type: object
+      properties:
+        appId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+        userEmail:
+          type: string
+        envHostname:
+          type: string
+        hostIp:
+          type: string
+          format: ipv4
+        secStatus:
+          $ref: '#/components/schemas/SecurityStatus'
+      required:
+        - appId
+        - userName
+        - userEmail
+        - envHostname
+        - hostIp
+        - secStatus
+
+    DefenseClientSecStatusUpdate:
+      type: object
+      properties:
+        appId:
+          type: integer
+          format: int64
+        secStatus:
+          $ref: '#/components/schemas/SecurityStatus'
+
+
+paths:
+  /defenseClient/downloadDefenseAppZip:
+    get:
+      tags:
+        - defenseClient
+      summary: Download Defense App Zip
+      operationId: downloadDefenseAppZip
+      responses:
+        200:
+          description: Binary content of the zip
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Error'
+
+  /defenseClient/adminDefenseClientInfo:
+    get:
+      tags:
+        - defenseClient
+      summary: Get admin defense client data
+      operationId: getAdminDefenseClientInfo
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminDefenseClient'
+        default:
+          $ref: '#/components/responses/Error'
+
+
+  /defenseClient/{userId}/registerInfo:
+    post:
+      tags:
+        - defenseClient
+      summary: Register Defense Application in the Frontend
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      operationId: defenseClientRegister
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegisterDefenseClientResponse'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /defenseApp/register:
+    post:
+      tags:
+        - defenseApp
+      summary: Register Defense Application
+      requestBody:
+        description: Registration request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDefenseAppRequest'
+      operationId: defenseAppRegister
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterDefenseAppResponse'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /defenseApp/{appId}/uninstall:
+    delete:
+      tags:
+        - defenseApp
+      summary: Uninstall Defense Application
+      parameters:
+        - name: appId
+          in: path
+          description: ID of the application to uninstall
+          required: true
+          schema:
+            type: integer
+            format: int64
+      operationId: defenseAppUninstall
+      responses:
+        204:
+          description: Successfully uninstalled the Defense Application
+        default:
+          $ref: '#/components/responses/Error'
+
+  /defenseApp/startSniffing:
+    post:
+      tags:
+        - defenseApp
+      operationId: startSniffing
+      summary: Start defense app sniffing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSniffingRequest'
+      responses:
+        200:
+          description: Sniffing started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        default:
+          $ref: '#/components/responses/Error'
+
+  /defenseApp/{appId}/stopSniffing:
+    post:
+      tags:
+        - defenseApp
+      operationId: stopSniffing
+      summary: Stop defense app
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: App stopped successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        default:
+          $ref: '#/components/responses/Error'
+
+  /defenseApp/{appId}/uninstallApp:
+    post:
+      tags:
+        - defenseApp
+      operationId: uninstallApp
+      summary: Uninstall defense app
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: App uninstalled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        default:
+          $ref: '#/components/responses/Error'
+
+  /defenseApp/updateEnvInfo:
+    post:
+      tags:
+        - defenseApp
+      summary: Update Env IP and network interface info in DB
+      operationId: updateEnvInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvInfoRequest'
+      responses:
+        200:
+          description: EnvInfo updated
+        default:
+          $ref: '#/components/responses/Error'
+
+  /defenseApp/uploadData:
+    post:
+      tags:
+        - defenseApp
+      summary: Upload Data
+      operationId: uploadDpiDataIDSResultAndAppSecStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/UploadDpiDataRequest'
+      responses:
+        200:
+          description: OK
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/register:
+    post:
+      tags:
+        - Users
+      summary: Register User
+      requestBody:
+        description: User Register Request Body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      operationId: register
+      responses:
+        201:
+          description: Created
+        default:
+          $ref: '#/components/responses/Error'
+
+  /users/login:
+    post:
+      tags:
+        - Users
+      summary: Login User
+      requestBody:
+        description: User Login Request Body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      operationId: login
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserResponse'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get List Of Users
+      operationId: getUsers
+      parameters:
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/sortParam'
+        - $ref: '#/components/parameters/filterParam'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserList'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /users/current:
+    get:
+      tags:
+        - Users
+      summary: Get Current User Details
+      operationId: getCurrentUserDetails
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /users/{id}/active:
+    put:
+      tags:
+        - Users
+      summary: Activate User
+      parameters:
+        - name: id
+          description: User Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      operationId: activateUser
+      responses:
+        200:
+          description: OK
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags:
+        - Users
+      summary: Deactivate User
+      parameters:
+        - name: id
+          description: User Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      operationId: deactivateUser
+      responses:
+        200:
+          description: OK
+        default:
+          $ref: '#/components/responses/Error'
+
+  /users/{id}/role:
+    put:
+      tags:
+        - Users
+      summary: Update User Role
+      operationId: updateUserRole
+      parameters:
+        - name: id
+          description: User Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Update User Role Request Body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRoleRequest'
+      responses:
+        200:
+          description: OK
+        default:
+          $ref: '#/components/responses/Error'
+
+  /roles/new-users:
+    get:
+      tags:
+        - Roles
+      summary: Get List Of Roles for new users
+      operationId: getRolesForNewUsers
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/Error'
+
+
+  /files:
+    post:
+      tags:
+        - Files
+      summary: Create File
+      operationId: createFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FileUpload'
+      responses:
+        201:
+          description: Created
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Files
+      summary: Get List Of Files
+      operationId: getFiles
+      parameters:
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/sortParam'
+        - $ref: '#/components/parameters/filterParam'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileList'
+        default:
+          $ref: '#/components/responses/Error'
+
+
+  /files/download:
+    get:
+      tags:
+        - Files
+      summary: Download File With File Path
+      operationId: downloadFile
+      parameters:
+        - name: filePath
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Path of the file to download
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employees:
+    get:
+      tags:
+        - Employees
+      summary: Get List Of Employees
+      operationId: getEmployees
+      parameters:
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/sortParam'
+        - $ref: '#/components/parameters/filterParam'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeesList'
+        default:
+          $ref: '#/components/responses/Error'

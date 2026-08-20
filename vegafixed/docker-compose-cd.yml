@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: c335133963661C
+      MYSQL_DATABASE: vega
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - vegaNetwork
+
+  frontend:
+    image: username/docker_repository_front
+    restart: always
+    ports:
+      - "80:3000"
+    networks:
+      - vegaNetwork
+    depends_on:
+      - vega-spring
+
+  vega-spring:
+    image: username/docker_repository_back
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vega?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: c335133963661C
+      SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - ./uploads:/app/uploads
+      - ./files:/opt/vegawebapp
+    networks:
+      - vegaNetwork
+
+volumes:
+  mysql-data:
+
+networks:
+  vegaNetwork:
+    driver: bridge

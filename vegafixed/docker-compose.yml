@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Part 5 uses the MySQL server installed on the host machine.
+  # mysql:
+  #   image: mysql:8.0
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+  #     MYSQL_DATABASE: ${MYSQL_DATABASE:-vega}
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+  #   networks:
+  #     - vegaNetwork
+
+# Frontend
+  frontend:
+    build:
+      context: ./vega-web
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - vegaNetwork
+    depends_on:
+      - vega-spring
+
+# Backend
+  vega-spring:
+    build:
+      context: ./vega-spring
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    # MySQL runs on the host machine, so there is no Compose dependency.
+    # depends_on:
+    #   - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3306/vega?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: vega_app
+      SPRING_DATASOURCE_PASSWORD: vega123
+      SPRING_FLYWAY_USER: vega_app
+      SPRING_FLYWAY_PASSWORD: vega123
+      SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - ./uploads:/app/uploads
+      - ./files:/opt/vegawebapp
+    networks:
+      - vegaNetwork
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  vegaNetwork:
+    driver: bridge
